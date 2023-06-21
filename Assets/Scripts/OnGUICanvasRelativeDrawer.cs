@@ -1,0 +1,67 @@
+﻿using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+
+public class OnGUICanvasRelativeDrawer : MonoBehaviour
+{
+
+    // class label drawing
+
+    struct Label
+    {
+        public string text;
+        public Rect rect;
+    }
+
+    [HideInInspector]
+    public RectTransform relativeObject { set { relative = value; rootCanvas = GetRootCanvas(value); } }
+    RectTransform relative;
+    RectTransform rootCanvas;
+
+    List<Label> labels = new List<Label>();
+    GUIStyle style;
+
+    // draw label on screen above relative object
+    public void DrawLabel(string text, Vector2 position)
+    {
+        Vector2 anchor = GetAnchorPosition();
+        Rect rect = new Rect(anchor + position * relative.rect.size, new Vector2(150, 100));
+        labels.Add(new Label { text = text, rect = rect });
+    }
+
+    // rdemove all previous draws
+    public void Clear()
+    {
+        labels.Clear();
+    }
+
+    private void Start()
+    {
+        style = new GUIStyle { fontSize = 20, normal = new GUIStyleState { textColor = Color.white } };
+    }
+
+    private void OnGUI()
+    {
+        foreach (var label in labels)
+        {
+            GUI.Label(label.rect, label.text, style);
+        }
+    }
+
+    private Vector2 GetAnchorPosition()
+    {
+        return new Vector2(relative.localPosition.x, -relative.localPosition.y) + rootCanvas.rect.size / 2 - relative.rect.size / 2;
+    }
+
+    private RectTransform GetRootCanvas(RectTransform rectTransform)
+    {
+        Transform parent = rectTransform.transform;
+        while (true)
+        {
+            if (parent.parent != null && parent.parent.GetComponent<RectTransform>() != null)
+                parent = parent.parent;
+            else
+                return parent.GetComponent<RectTransform>();
+        }
+    }
+}
